@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Billing Invoice Entry</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: "Segoe UI", Arial, sans-serif;
+            margin: 0;
+            background: #f6f8fa;
+            color: #333;
+        }
+
+        /* Top header bar */
+        header {
+            background: var(--blue);
+            color: white;
+            padding: 15px 25px;
+            text-align: center;
+            font-size: 22px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        }
+
+        .container {
+            max-width: 950px;
+            margin: 30px auto;
+            background: #fff;
+            padding: 25px 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .grid-two {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 18px 25px;
+        }
+
+        h2 {
+            color: #00539C;
+            margin-bottom: 20px;
+        }
+
+        h4 {
+            margin: 0 0 10px 0;
+            color: #444;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        label {
+            display: flex;
+            flex-direction: column;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        input, select {
+            padding: 8px 10px;
+            margin-top: 4px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        fieldset {
+            border: 2px solid #0078D4;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 10px;
+            background: #f9fbfd;
+        }
+
+        legend {
+            padding: 0 10px;
+            font-weight: bold;
+            color: #0078D4;
+        }
+
+        .part-box {
+            border-left: 5px solid #0078D4;
+            background: #f9fbfd;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        }
+
+        .address-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        button {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 6px;
+            background: #0078D4;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: background 0.2s ease;
+        }
+
+            button:hover {
+                background: #005fa3;
+            }
+
+        .action-buttons, .nav-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .status {
+            margin-top: 15px;
+            font-weight: bold;
+            text-align: center;
+            color: green;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <center><h2>1 Stop - Enter Invoice Details</h2></center>
+        <form id="invoiceForm">
+            <!-- Part 1 -->
+            <div class="part-box" style="border-color:#0078D4;">
+                <div class="grid-two">
+                    <label>RefNo*: <input type="number" id="RefNo" required></label>
+                    <label>InvoiceNo*: <input type="text" id="InvoiceNo" required></label>
+                    <label>InvoiceDate*: <input type="date" id="InvoiceDate" required></label>
+                    <label>BillType*: <input type="text" id="BillType" required></label>
+                    <label>OrderNo*: <input type="text" id="OrderNo" required></label>
+                    <label>OrderDate*: <input type="date" id="OrderDate" required></label>
+                    <label>TermsPayment*: <input type="text" id="TermsPayment" required></label>
+                    <label>CustomerGSTNo: <input type="text" id="CustomerGSTNo" required></label>
+                    <label>GSTState: <input type="text" id="GSTState"></label>
+                </div>
+            </div>
+            <!--
+    <label>CustomerName: <input type="text" id="CustomerName"></label>
+    <label>AddressOne: <input type="text" id="AddressOne"></label>
+    <label>AddressTwo: <input type="text" id="AddressTwo"></label>
+    <label>AddressThree: <input type="text" id="AddressThree"></label>
+    <label>AddressFour: <input type="text" id="AddressFour"></label>
+    -->
+            <!-- Customer and Delivery Address Section -->
+            <!-- Part 2 -->
+            <div class="part-box" style="border-color:#00A36C;">
+                <fieldset class="address-section">
+                    <legend><h4>Customer Name & Address</h4></legend>
+                    <div class="address-grid">
+                        <div class="address-column">
+                            <label>
+                                Customer Name*:
+                                <input type="text" id="CustomerName" placeholder="Customer Name" required>
+                            </label>
+                            <label>
+                                Address One:
+                                <input type="text" id="AddressOne" placeholder="Address Line 1">
+                            </label>
+                            <label>
+                                Address Two:
+                                <input type="text" id="AddressTwo" placeholder="Address Line 2">
+                            </label>
+                            <label>
+                                Address Three:
+                                <input type="text" id="AddressThree" placeholder="Address Line 3">
+                            </label>
+                            <label>
+                                Address Four:
+                                <input type="text" id="AddressFour" placeholder="Address Line 4">
+                            </label>
+                            <label>
+                                Customer Phone No:
+                                <input type="text" id="CustomerPhone" placeholder="Phone No">
+                            </label>
+
+                        </div>
+
+                        <div class="address-column">
+                            <h4>Delivery Address</h4>
+                            <label>
+                                Delivery Name:
+                                <input type="text" id="DeliveryName" placeholder="Delivery Name">
+                            </label>
+                            <label>
+                                Address One:
+                                <input type="text" id="DelAddressOne" placeholder="Address Line 1">
+                            </label>
+                            <label>
+                                Address Two:
+                                <input type="text" id="DelAddressTwo" placeholder="Address Line 2">
+                            </label>
+                            <label>
+                                Address Three:
+                                <input type="text" id="DelAddressThree" placeholder="Address Line 3">
+                            </label>
+                            <label>
+                                Address Four:
+                                <input type="text" id="DelAddressFour" placeholder="Address Line 4">
+                            </label>
+                            <label>
+                                Delivery Phone No:
+                                <input type="text" id="DeliveryPhone" placeholder="DeliveryPhone No">
+                            </label>
+
+                        </div>
+                    </div>
+                </fieldset>
+            </div>
+
+            <!-- Customer and Delivery Address Section above -->
+            <!-- Part 3 -->
+            <div class="part-box" style="border-color:#FF8C00;">
+                <div class="grid-two">
+
+                    <label>ItemNo: <input type="text" id="ItemNo"></label>
+                    <label>Description: <input type="text" id="Description"></label>
+                    <label>HSN-SAC: <input type="text" id="HSNSAC"></label>
+                    <label>Quantity: <input type="number" id="Quantity"></label>
+                    <label>Rate: <input type="number" step="0.01" id="Rate"></label>
+                    <label>PER: <input type="text" id="PER"></label>
+                    <label>GSTPC: <input type="number" step="0.01" id="GSTPC"></label>
+                    <label>RupeesOne: <input type="text" id="RupeesOne"></label>
+                    <label>RupeesTwo: <input type="text" id="RupeesTwo"></label>
+                </div>
+            </div>
+
+            <!-- Action buttons -->
+
+            <div class="action-buttons">
+                <button type="submit">Submit Invoice</button>
+                <button type="button" id="saveInvoice">Save Changes</button>
+                <button type="button" id="deleteInvoice">Delete by RefNo</button>
+                <button type="button" id="deleteInvoiceNo">Delete by InvoiceNo</button>
+                <button type="button" id="searchRefNo">Search by RefNo</button>
+            </div>
+            <br>
+
+            <!-- Navigation buttons -->
+
+            <div class="nav-buttons">
+                <button type="button" id="addNewInvoice">➕NewBill</button>
+                <button type="button" id="firstRecord">First</button>
+                <button type="button" id="prevRecord">Previous</button>
+                <button type="button" id="nextRecord">Next</button>
+                <button type="button" id="lastRecord">Last</button>
+                <button type="button" id="searchInvoiceNo">Search by InvoiceNo</button>
+
+                <button type="button" id="billUpdate">BillUpdate</button>
+            </div>
+
+        </form>
+
+        <div class="status" id="status"></div>
+    </div>
+
+    <script>
+        const apiBase = "https://localhost:7120/api/invoice"; // Change to your API URL
+
+        let invoices = []; // store all invoices for navigation
+        let currentIndex = -1;
+
+        // Utility: Load invoice data into form
+        function loadInvoiceToForm(inv) {
+            document.getElementById("RefNo").value = inv.RefNo ?? inv.refNo ?? "";
+            document.getElementById("InvoiceNo").value = inv.InvoiceNo ?? inv.invoiceNo ?? "";
+            document.getElementById("InvoiceDate").value = (inv.InvoiceDate ?? inv.invoiceDate ?? "").split('T')[0];
+            document.getElementById("BillType").value = inv.BillType ?? inv.billType ?? "";
+            document.getElementById("OrderNo").value = inv.OrderNo ?? inv.orderNo ?? "";
+            document.getElementById("OrderDate").value = (inv.OrderDate ?? inv.orderDate ?? "").split('T')[0];
+            document.getElementById("TermsPayment").value = inv.TermsPayment ?? inv.termsPayment ?? "";
+            document.getElementById("CustomerName").value = inv.CustomerName ?? inv.customerName ?? "";
+            document.getElementById("AddressOne").value = inv.AddressOne ?? inv.addressOne ?? "";
+            document.getElementById("AddressTwo").value = inv.AddressTwo ?? inv.addressTwo ?? "";
+            document.getElementById("AddressThree").value = inv.AddressThree ?? inv.addressThree ?? "";
+            document.getElementById("AddressFour").value = inv.AddressFour ?? inv.addressFour ?? "";
+            document.getElementById("CustomerPhone").value = inv.CustomerPhone ?? inv.customerPhone ?? "";
+
+            document.getElementById("DeliveryName").value = inv.DeliveryName ?? inv.deliveryName ?? "";
+            document.getElementById("DelAddressOne").value = inv.DelAddressOne ?? inv.delAddressOne ?? "";
+            document.getElementById("DelAddressTwo").value = inv.DelAddressTwo ?? inv.delAddressTwo ?? "";
+            document.getElementById("DelAddressThree").value = inv.DelAddressThree ?? inv.delAddressThree ?? "";
+            document.getElementById("DelAddressFour").value = inv.DelAddressFour ?? inv.delAddressFour ?? "";
+            document.getElementById("DeliveryPhone").value = inv.DeliveryPhone ?? inv.deliveryPhone ?? "";
+
+            document.getElementById("CustomerGSTNo").value = inv.CustomerGSTNo ?? inv.customerGSTNo ?? "";
+            document.getElementById("GSTState").value = inv.GSTState ?? inv.gstState ?? "";
+            document.getElementById("ItemNo").value = inv.ItemNo ?? inv.itemNo ?? "";
+            document.getElementById("Description").value = inv.Description ?? inv.description ?? "";
+            document.getElementById("HSNSAC").value = inv.HSNSAC ?? inv.hsnsac ?? "";
+            document.getElementById("Quantity").value = inv.Quantity ?? inv.quantity ?? 0;
+            document.getElementById("Rate").value = inv.Rate ?? inv.rate ?? 0;
+            document.getElementById("PER").value = inv.PER ?? inv.per ?? "";
+            document.getElementById("GSTPC").value = inv.GSTPC ?? inv.gstpc ?? 0;
+            document.getElementById("RupeesOne").value = inv.RupeesOne ?? inv.rupeesOne ?? "";
+            document.getElementById("RupeesTwo").value = inv.RupeesTwo ?? inv.rupeesTwo ?? "";
+        }
+
+
+
+
+        // Utility: Collect form data
+        function getFormData() {
+            const data = {};
+            [...document.querySelectorAll("#invoiceForm input")].forEach(input => {
+                data[input.id] = input.type === "number" ? parseFloat(input.value) || 0 : input.value;
+            });
+            return data;
+        }
+
+        // Fetch all invoices
+        async function fetchAllInvoices() {
+            try {
+                const res = await fetch(apiBase);
+                if (!res.ok) throw new Error("API returned " + res.status);
+                invoices = await res.json();
+                if (invoices.length > 0) {
+                    currentIndex = 0;
+                    loadInvoiceToForm(invoices[currentIndex]);
+                    document.getElementById("status").innerText = "Fetched " + invoices.length + " invoices";
+                } else {
+                    currentIndex = -1;
+                    document.getElementById("status").innerText = "No invoices found";
+                }
+            } catch (err) {
+                console.error(err);
+                document.getElementById("status").innerText = "❌ Error Fetching Invoices: " + err.message;
+            }
+        }
+
+        // Navigation buttons
+        document.getElementById("firstRecord").addEventListener("click", () => {
+            fetchAllInvoices(); //just fetch all records and show first, then other nav buttons will work
+            if (invoices.length === 0) return;
+            currentIndex = 0;
+            loadInvoiceToForm(invoices[currentIndex]);
+        });
+
+        document.getElementById("lastRecord").addEventListener("click", () => {
+            if (invoices.length === 0) return;
+            currentIndex = invoices.length - 1;
+            loadInvoiceToForm(invoices[currentIndex]);
+        });
+
+        document.getElementById("nextRecord").addEventListener("click", () => {
+            if (invoices.length === 0) return;
+            currentIndex = Math.min(currentIndex + 1, invoices.length - 1);
+            loadInvoiceToForm(invoices[currentIndex]);
+        });
+
+        document.getElementById("prevRecord").addEventListener("click", () => {
+            if (invoices.length === 0) return;
+            currentIndex = Math.max(currentIndex - 1, 0);
+            loadInvoiceToForm(invoices[currentIndex]);
+        });
+
+        // Submit new invoice (POST)
+        document.getElementById("invoiceForm").addEventListener("submit", async function (e) {
+            e.preventDefault();
+            const data = getFormData();
+            try {
+                const res = await fetch(apiBase, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(data)
+                });
+                if (res.ok) {
+                    document.getElementById("status").innerText = "✅ Invoice submitted successfully!";
+                    await fetchAllInvoices(); // refresh local list
+                } else {
+                    const err = await res.json();
+                    document.getElementById("status").innerText = "❌ Error: " + (err.message || "Unknown");
+                }
+            } catch (err) {
+                console.error(err);
+                document.getElementById("status").innerText = "❌ Network or API error";
+            }
+        });
+
+        // Save changes (PUT by RefNo)
+        document.getElementById("saveInvoice").addEventListener("click", async () => {
+            const refNo = document.getElementById("RefNo").value;
+            if (!refNo) { alert("No RefNo present."); return; }
+            const data = getFormData();
+            try {
+                const res = await fetch(`${apiBase}/ref/${refNo}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(data)
+                });
+                if (res.ok) {
+                    document.getElementById("status").innerText = "✅ Saved successfully (by RefNo)";
+                    await fetchAllInvoices();
+                } else {
+                    const err = await res.json();
+                    document.getElementById("status").innerText = "❌ Error: " + (err.message || "Unknown");
+                }
+            } catch (err) {
+                console.error(err);
+                document.getElementById("status").innerText = "❌ Network or API error";
+            }
+        });
+
+        // Delete by RefNo
+        document.getElementById("deleteInvoice").addEventListener("click", async () => {
+            const refNo = document.getElementById("RefNo").value || prompt("Enter RefNo to delete:");
+            if (!refNo) return;
+            if (!confirm("Delete invoice RefNo " + refNo + "?")) return;
+            try {
+                const res = await fetch(`${apiBase}/ref/${refNo}`, { method: "DELETE" });
+                if (res.ok) {
+                    document.getElementById("status").innerText = "✅ Deleted successfully (by RefNo)";
+                    await fetchAllInvoices();
+                }
+            } catch (err) { console.error(err); }
+        });
+
+        // Delete by InvoiceNo
+        document.getElementById("deleteInvoiceNo").addEventListener("click", async () => {
+            const invoiceNo = prompt("Enter InvoiceNo to delete:");
+            if (!invoiceNo) return;
+            if (!confirm("Delete invoice InvoiceNo " + invoiceNo + "?")) return;
+            try {
+                const res = await fetch(`${apiBase}/invoiceNo/${invoiceNo}`, { method: "DELETE" });
+                if (res.ok) {
+                    document.getElementById("status").innerText = "✅ Deleted successfully (by InvoiceNo)";
+                    await fetchAllInvoices();
+                }
+            } catch (err) { console.error(err); }
+        });
+
+        // 🔹 Search by RefNo
+        document.getElementById("searchRefNo").addEventListener("click", async () => {
+            // Prompt user to enter RefNo
+            const refNo = prompt("Enter RefNo to search:");
+            if (!refNo) return;
+
+            try {
+                // Fetch invoice by RefNo
+                const res = await fetch(`${apiBase}/ref/${refNo}`);
+                if (!res.ok) {
+                    document.getElementById("status").innerText = "❌ RefNo not found";
+                    return;
+                }
+
+                const inv = await res.json();
+                // Load the invoice into the form
+                loadInvoiceToForm(inv);
+
+                // Update status message
+                document.getElementById("status").innerText = `✅ Invoice loaded for editing (RefNo: ${refNo})`;
+            } catch (err) {
+                console.error(err);
+                document.getElementById("status").innerText = "❌ Error fetching by RefNo";
+            }
+        });
+
+        // Search by InvoiceNo
+
+        document.getElementById("searchInvoiceNo").addEventListener("click", async () => {
+            const invoiceNo = prompt("Enter InvoiceNo to search:");
+            if (!invoiceNo) return;
+            try {
+
+                const encodedInvoiceNo = encodeURIComponent(invoiceNo); //handles special chars or / etc
+                const res = await fetch(`${apiBase}/invoiceNo/${encodedInvoiceNo}`); //handles special chars or / etc
+
+                if (!res.ok) { document.getElementById("status").innerText = "❌ Not found"; return; }
+                const inv = await res.json();
+                loadInvoiceToForm(inv);
+                document.getElementById("status").innerText = "✅ Invoice loaded for editing (by InvoiceNo)";
+            } catch (err) {
+                console.error(err);
+                document.getElementById("status").innerText = "❌ Error fetching by InvoiceNo";
+            }
+        });
+
+        // PUT by InvoiceNo (update)
+        async function saveByInvoiceNo(invoiceNo) {
+            const data = getFormData();
+            try {
+                const res = await fetch(`${apiBase}/invoiceNo/${invoiceNo}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(data)
+                });
+                if (res.ok) {
+                    document.getElementById("status").innerText = "✅ Saved successfully (by InvoiceNo)";
+                    await fetchAllInvoices();
+                } else {
+                    const err = await res.json();
+                    document.getElementById("status").innerText = "❌ Error: " + (err.message || "Unknown");
+                }
+            } catch (err) {
+                console.error(err);
+                document.getElementById("status").innerText = "❌ Network or API error";
+            }
+        }
+
+
+        /*
+        🔹 NEW BILL UPDATE HANDLER
+        Calls POST /api/invoice/billupdate
+        Pushes current form values into "SingleBillSheet" in Excel in the new sheet first row
+        */
+        // BillUpdate button (send current form data to API)
+        document.getElementById("billUpdate").addEventListener("click", async () => {
+            const data = getFormData();  // Collects all inputs from form
+            try {
+                const res = await fetch(`${apiBase}/billupdate`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(data)
+                });
+
+                if (res.ok) {
+                    const result = await res.json();
+                    document.getElementById("status").innerText = result.message;
+                } else {
+                    const err = await res.text();
+                    document.getElementById("status").innerText = "❌ Error in BillUpdate: " + err;
+                }
+            } catch (err) {
+                console.error("BillUpdate Error:", err);
+                document.getElementById("status").innerText = "❌ Network or API error";
+            }
+        });
+
+        // Update the new sheet first row is over
+
+
+        // 🔹 Add New Bill - clears all form fields for new entry
+        document.getElementById("addNewInvoice").addEventListener("click", () => {
+            // Clear all input fields
+            document.querySelectorAll("#invoiceForm input").forEach(input => {
+                if (input.type === "number") {
+                    input.value = "";
+                } else {
+                    input.value = "";
+                }
+            });
+
+            // Reset current index so it doesn’t point to existing record
+            currentIndex = -1;
+
+            // Update status text
+            document.getElementById("status").innerText = "🆕 Ready to enter new bill details";
+
+            // Optional: set today's date as default for invoice
+            document.getElementById("InvoiceDate").value = new Date().toISOString().split('T')[0];
+        });
+
+
+        // Initial fetch - comment this below single line to stop loading records initially.
+        //fetchAllInvoices();
+
+        // Wait until user clicks "Search" or "Add New"
+        // (Commented out auto-fetch)
+        // fetchAllInvoices();
+        document.getElementById("status").innerText = "📄 Ready – click 'Add New Bill' or 'Search'";
+
+    </script>
+</body>
+</html>
