@@ -1,4 +1,4 @@
-# Use official .NET SDK image for building
+# ===== Build Stage =====
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 
 WORKDIR /app
@@ -11,16 +11,17 @@ RUN dotnet restore
 COPY . ./
 RUN dotnet publish -c Release -o out
 
-# Use runtime image for final container
+# ===== Runtime Stage =====
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 
 WORKDIR /app
 
-# Copy published files from build
-COPY --from=build /app/out .
+# Copy published output from build stage
+COPY --from=build /app/out ./
 
-# Expose port
-EXPOSE 8080
+# Set Render environment port
+ENV PORT=8080
+EXPOSE $PORT
 
-# Run the app
+# Run the application
 ENTRYPOINT ["dotnet", "BillingAPI.dll"]
