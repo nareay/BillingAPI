@@ -17,46 +17,45 @@
 <body>
     <div class="login-box">
         <h2>Billing Login</h2>
-        <form id="loginForm">
-            <input type="text" id="username" placeholder="Username" required>
-            <input type="password" id="password" placeholder="Password" required>
-            <button type="submit">Login</button>
-            <div id="status" class="error"></div>
-        </form>
+        <input type="text" id="username" placeholder="Username">
+        <input type="password" id="password" placeholder="Password">
+        <button id="loginBtn">Login</button>
+        <div class="error" id="errorMsg"></div>
     </div>
 
-   <script>
-    const apiLogin = "https://your-api-domain.onrender.com/api/auth/login"; // update your API URL
+    <script>
+        const apiBase = "https://billingapi-ncl9.onrender.com/api/auth/login";
 
-    document.getElementById("loginForm").addEventListener("submit", async function(e) {
-        e.preventDefault();
-        const username = document.getElementById("username").value;
-        const password = document.getElementById("password").value;
+        document.getElementById("loginBtn").addEventListener("click", async () => {
+            const username = document.getElementById("username").value.trim();
+            const password = document.getElementById("password").value.trim();
+            const errorDiv = document.getElementById("errorMsg");
 
-        try {
-            const res = await fetch(apiLogin, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username, password })
-            });
-
-            if (res.ok) {
-                // ✅ Login success → store token
-                localStorage.setItem("billingLoggedIn", "true");
-
-                // Redirect to invoice.html
-                window.location.href = "index.html";
-            } else {
-                const err = await res.json();
-                document.getElementById("status").innerText = "❌ " + (err.message || "Login failed");
+            if (!username || !password) {
+                errorDiv.innerText = "Please enter username and password";
+                return;
             }
-        } catch (err) {
-            console.error(err);
-            document.getElementById("status").innerText = "❌ Network or API error";
-        }
-    });
-</script>
 
+            try {
+                const res = await fetch(apiBase, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ Username: username, Password: password })
+                });
+
+                if (res.ok) {
+                    // ✅ Login success
+                    localStorage.setItem("billingLoggedIn", "true");
+                    window.location.href = "index.html"; // Redirect to invoice page
+                } else {
+                    const err = await res.json();
+                    errorDiv.innerText = err.message || "Invalid credentials";
+                }
+            } catch (err) {
+                console.error("Login error:", err);
+                errorDiv.innerText = "Network or API error";
+            }
+        });
+    </script>
 </body>
 </html>
-
