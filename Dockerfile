@@ -23,5 +23,6 @@ COPY --from=build /app/out ./
 ENV PORT=8080
 EXPOSE $PORT
 
+ENV ASPNETCORE_URLS=http://+:8080
 # Run the application
 ENTRYPOINT ["dotnet", "BillingAPI.dll"]
