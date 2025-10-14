@@ -279,7 +279,19 @@
     <script>
     // ✅ Render API base
     const apiBase = "https://billingapi-ncl9.onrender.com/api/invoice";
+    //------------------------------------------------------------------
+        // 🔹 Simple session check
+    if (localStorage.getItem("billingLoggedIn") !== "true") {
+        // Not logged in → redirect to login
+        window.location.href = "login.html";
+    }
 
+    // Optional: Logout function
+    function logout() {
+        localStorage.removeItem("billingLoggedIn");
+        window.location.href = "login.html";
+    }
+    //-------------------------------------------------------------------
     let invoices = []; // store all invoices for navigation
     let currentIndex = -1;
 
@@ -542,4 +554,5 @@
 
 </body>
 </html>
+
 
