@@ -12,7 +12,7 @@ namespace BillingAPI.Controllers
 
         public InvoiceController()
         {
-            // Path relative to the published DLL (works in Render container)
+            // Path relative to the published DLL
             _filePath = Path.Combine(AppContext.BaseDirectory, "TaxInvoiceFormat.xlsx");
 
             if (!System.IO.File.Exists(_filePath))
@@ -25,11 +25,7 @@ namespace BillingAPI.Controllers
         [HttpPost]
         public IActionResult Create([FromBody] InvoiceModel model)
         {
-            // Copy to temp before write
-            string tempFile = Path.Combine(Path.GetTempPath(), "TaxInvoiceFormat.xlsx");
-            System.IO.File.Copy(_filePath, tempFile, true);
-
-            using var workbook = new XLWorkbook(tempFile);
+            using var workbook = new XLWorkbook(_filePath);
             var ws = workbook.Worksheets.Worksheet(1);
 
             int lastRow = ws.LastRowUsed()?.RowNumber() ?? 1;
@@ -92,7 +88,9 @@ namespace BillingAPI.Controllers
         // ✅ Full Update by RefNo
         [HttpPut("ref/{refNo}")]
         public IActionResult UpdateByRefNo(int refNo, [FromBody] InvoiceModel model)
-            => UpdateInvoice("RefNo", refNo.ToString(), model);
+        {
+            return UpdateInvoice("RefNo", refNo.ToString(), model);
+        }
 
         // ✅ Full Update by InvoiceNo
         [HttpPut("invoiceNo/{invoiceNo}")]
@@ -105,12 +103,16 @@ namespace BillingAPI.Controllers
         // ✅ Partial update (PATCH) by RefNo
         [HttpPatch("ref/{refNo}")]
         public IActionResult PatchByRefNo(int refNo, [FromBody] Dictionary<string, object> updates)
-            => PatchInvoice("RefNo", refNo.ToString(), updates);
+        {
+            return PatchInvoice("RefNo", refNo.ToString(), updates);
+        }
 
         // ✅ Delete by RefNo
         [HttpDelete("ref/{refNo}")]
         public IActionResult DeleteByRefNo(int refNo)
-            => DeleteInvoice("RefNo", refNo.ToString());
+        {
+            return DeleteInvoice("RefNo", refNo.ToString());
+        }
 
         // ✅ Delete by InvoiceNo
         [HttpDelete("invoiceNo/{invoiceNo}")]
@@ -126,47 +128,46 @@ namespace BillingAPI.Controllers
         {
             try
             {
-                // Copy template to temp before write
-                string tempFile = Path.Combine(Path.GetTempPath(), "TaxInvoiceFormat.xlsx");
-                System.IO.File.Copy(_filePath, tempFile, true);
-
-                using var workbook = new XLWorkbook(tempFile);
-
+                using var workbook = new XLWorkbook(_filePath);
                 var singleBillSheet = workbook.Worksheets.FirstOrDefault(ws => ws.Name == "SingleBillSheet");
 
                 if (singleBillSheet == null)
                 {
                     singleBillSheet = workbook.AddWorksheet("SingleBillSheet");
-                    // ✅ Add headers
-                    string[] headers = {
-                        "RefNo","InvoiceNo","InvoiceDate","BillType","OrderNo","OrderDate","TermsPayment","CustomerName",
-                        "AddressOne","AddressTwo","AddressThree","AddressFour","CustomerPhone","DeliveryName",
-                        "DelAddressOne","DelAddressTwo","DelAddressThree","DelAddressFour","DeliveryPhone",
-                        "CustomerGSTNo","GSTState","ItemNo","Description","HSNSAC","Quantity","Rate","PER","GSTPC",
-                        "RupeesOne","RupeesTwo"
+
+                    string[] headers = new string[]
+                    {
+                        "RefNo","InvoiceNo","InvoiceDate","BillType","OrderNo","OrderDate","TermsPayment",
+                        "CustomerName","AddressOne","AddressTwo","AddressThree","AddressFour","CustomerPhone",
+                        "DeliveryName","DelAddressOne","DelAddressTwo","DelAddressThree","DelAddressFour","DeliveryPhone",
+                        "CustomerGSTNo","GSTState","ItemNo","Description","HSNSAC","Quantity","Rate","PER","GSTPC","RupeesOne","RupeesTwo"
                     };
-                    for(int i=0;i<headers.Length;i++)
-                        singleBillSheet.Cell(1,i+1).Value = headers[i];
+
+                    for (int i = 0; i < headers.Length; i++)
+                        singleBillSheet.Cell(1, i + 1).Value = headers[i];
                 }
 
-                // Insert new row at 2
-                var rowData = new object[] {
-                    model.RefNo,model.InvoiceNo,model.InvoiceDate,model.BillType,model.OrderNo,model.OrderDate,
-                    model.TermsPayment,model.CustomerName,model.AddressOne,model.AddressTwo,model.AddressThree,
-                    model.AddressFour,model.CustomerPhone,model.DeliveryName,model.DelAddressOne,model.DelAddressTwo,
-                    model.DelAddressThree,model.DelAddressFour,model.DeliveryPhone,model.CustomerGSTNo,model.GSTState,
-                    model.ItemNo,model.Description,model.HSNSAC,model.Quantity,model.Rate,model.PER,model.GSTPC,
-                    model.RupeesOne,model.RupeesTwo
+                // Convert model to array
+                var rowData = new object[]
+                {
+                    model.RefNo, model.InvoiceNo, model.InvoiceDate, model.BillType, model.OrderNo, model.OrderDate,
+                    model.TermsPayment, model.CustomerName, model.AddressOne, model.AddressTwo, model.AddressThree, model.AddressFour,
+                    model.CustomerPhone, model.DeliveryName, model.DelAddressOne, model.DelAddressTwo, model.DelAddressThree, model.DelAddressFour,
+                    model.DeliveryPhone, model.CustomerGSTNo, model.GSTState, model.ItemNo, model.Description, model.HSNSAC,
+                    model.Quantity, model.Rate, model.PER, model.GSTPC, model.RupeesOne, model.RupeesTwo
                 };
 
+                // Insert as row 2
                 singleBillSheet.Row(2).InsertRowsAbove(1);
+
                 for (int i = 0; i < rowData.Length; i++)
                 {
-                    singleBillSheet.Cell(2, i + 1).Value = rowData[i] ?? string.Empty;
+                    var value = rowData[i];
+                    singleBillSheet.Cell(2, i + 1).Value = value?.ToString() ?? string.Empty;
                 }
 
                 workbook.Save();
-                return Ok(new { message = "Invoice added to SingleBillSheet (as first row)" });
+                return Ok(new { message = "✅ Invoice added to SingleBillSheet (as first row)" });
             }
             catch (Exception ex)
             {
@@ -174,7 +175,7 @@ namespace BillingAPI.Controllers
             }
         }
 
-        // 🔹 Helpers
+        // 🔹 Private helpers
         private IActionResult UpdateInvoice(string keyType, string keyValue, InvoiceModel model)
         {
             using var workbook = new XLWorkbook(_filePath);
@@ -190,11 +191,13 @@ namespace BillingAPI.Controllers
                     break;
                 }
             }
+
             if (targetRow == -1)
                 return NotFound(new { message = $"{keyType} {keyValue} not found" });
 
             MapModelToRow(ws, targetRow, model);
             workbook.Save();
+
             return Ok(new { message = $"Invoice {keyType} {keyValue} updated successfully" });
         }
 
@@ -213,6 +216,7 @@ namespace BillingAPI.Controllers
                     break;
                 }
             }
+
             if (targetRow == -1)
                 return NotFound(new { message = $"{keyType} {keyValue} not found" });
 
@@ -256,14 +260,8 @@ namespace BillingAPI.Controllers
 
                 if (cell != null)
                 {
-                    if (kv.Value == null) cell.Clear();
-                    else if (kv.Value is string s) cell.Value = s;
-                    else if (kv.Value is int i) cell.Value = i;
-                    else if (kv.Value is long l) cell.Value = l;
-                    else if (kv.Value is double d) cell.Value = d;
-                    else if (kv.Value is decimal dec) cell.Value = dec;
-                    else if (kv.Value is DateTime dt) cell.Value = dt;
-                    else cell.Value = kv.Value.ToString();
+                    object value = kv.Value;
+                    cell.Value = value?.ToString() ?? string.Empty;
                 }
             }
 
