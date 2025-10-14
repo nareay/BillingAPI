@@ -10,11 +10,16 @@ namespace BillingAPI.Controllers
     {
         private readonly string _filePath;
 
-        public InvoiceController(IWebHostEnvironment env)
-        {
-            _filePath = Path.Combine(env.ContentRootPath, "Billing", "TaxInvoiceFormat.xlsx");
-        }
+public InvoiceController()
+{
+    // Path relative to the published DLL
+    _filePath = Path.Combine(AppContext.BaseDirectory, "TaxInvoiceFormat.xlsx");
 
+    if (!System.IO.File.Exists(_filePath))
+    {
+        throw new FileNotFoundException("Excel template not found.", _filePath);
+    }
+}
         // ✅ Create new invoice
         [HttpPost]
         public IActionResult Create([FromBody] InvoiceModel model)
@@ -449,3 +454,4 @@ namespace BillingAPI.Controllers
 
     }
 }
+
