@@ -3,26 +3,31 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 
 WORKDIR /app
 
-# Copy csproj and restore dependencies
+# Copy csproj and restore
 COPY *.csproj ./
 RUN dotnet restore
 
-# Copy all files and publish
+# Copy everything else
 COPY . ./
+
+# Publish
 RUN dotnet publish -c Release -o out
 
 # ===== Runtime Stage =====
-FROM mcr.microsoft.com/dotnet/aspnet:8.0
-
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 
-# Copy published output from build stage
+# Set Render port
+ENV ASPNETCORE_URLS=http://+:8080
+
+# Copy published files
 COPY --from=build /app/out ./
 
-# Set Render environment port
-ENV PORT=8080
-EXPOSE $PORT
+# Copy Excel template into the runtime container
+COPY TaxInvoiceFormat.xlsx ./
 
-ENV ASPNETCORE_URLS=http://+:8080
-# Run the application
+# Expose port 8080
+EXPOSE 8080
+
+# Start the application
 ENTRYPOINT ["dotnet", "BillingAPI.dll"]
