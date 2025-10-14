@@ -283,12 +283,12 @@
     //------------------------------------------------------------------
         // 🔹 Simple session check
     if (localStorage.getItem("billingLoggedIn") !== "true") {
-        // Not logged in → redirect to login
+        // Not logged in → redirect to login page
         window.location.href = "login.html";
     }
 
     // Optional: Logout function
-    function logout() {
+     function logout() {
         localStorage.removeItem("billingLoggedIn");
         window.location.href = "login.html";
     }
@@ -555,6 +555,7 @@
 
 </body>
 </html>
+
 
 
 
