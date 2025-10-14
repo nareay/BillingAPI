@@ -45,7 +45,7 @@
                 localStorage.setItem("billingLoggedIn", "true");
 
                 // Redirect to invoice.html
-                window.location.href = "invoice.html";
+                window.location.href = "index.html";
             } else {
                 const err = await res.json();
                 document.getElementById("status").innerText = "❌ " + (err.message || "Login failed");
@@ -59,3 +59,4 @@
 
 </body>
 </html>
+
