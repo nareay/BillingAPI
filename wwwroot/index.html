@@ -277,310 +277,269 @@
     </div>
 
     <script>
-        const apiBase = "https://localhost:7120/api/invoice"; // Change to your API URL
+    // ✅ Render API base
+    const apiBase = "https://billingapi-ncl9.onrender.com/api/invoice";
 
-        let invoices = []; // store all invoices for navigation
-        let currentIndex = -1;
+    let invoices = []; // store all invoices for navigation
+    let currentIndex = -1;
 
-        // Utility: Load invoice data into form
-        function loadInvoiceToForm(inv) {
-            document.getElementById("RefNo").value = inv.RefNo ?? inv.refNo ?? "";
-            document.getElementById("InvoiceNo").value = inv.InvoiceNo ?? inv.invoiceNo ?? "";
-            document.getElementById("InvoiceDate").value = (inv.InvoiceDate ?? inv.invoiceDate ?? "").split('T')[0];
-            document.getElementById("BillType").value = inv.BillType ?? inv.billType ?? "";
-            document.getElementById("OrderNo").value = inv.OrderNo ?? inv.orderNo ?? "";
-            document.getElementById("OrderDate").value = (inv.OrderDate ?? inv.orderDate ?? "").split('T')[0];
-            document.getElementById("TermsPayment").value = inv.TermsPayment ?? inv.termsPayment ?? "";
-            document.getElementById("CustomerName").value = inv.CustomerName ?? inv.customerName ?? "";
-            document.getElementById("AddressOne").value = inv.AddressOne ?? inv.addressOne ?? "";
-            document.getElementById("AddressTwo").value = inv.AddressTwo ?? inv.addressTwo ?? "";
-            document.getElementById("AddressThree").value = inv.AddressThree ?? inv.addressThree ?? "";
-            document.getElementById("AddressFour").value = inv.AddressFour ?? inv.addressFour ?? "";
-            document.getElementById("CustomerPhone").value = inv.CustomerPhone ?? inv.customerPhone ?? "";
+    // Load invoice data into form
+    function loadInvoiceToForm(inv) {
+        document.getElementById("RefNo").value = inv.RefNo ?? inv.refNo ?? "";
+        document.getElementById("InvoiceNo").value = inv.InvoiceNo ?? inv.invoiceNo ?? "";
+        document.getElementById("InvoiceDate").value = (inv.InvoiceDate ?? inv.invoiceDate ?? "").split('T')[0];
+        document.getElementById("BillType").value = inv.BillType ?? inv.billType ?? "";
+        document.getElementById("OrderNo").value = inv.OrderNo ?? inv.orderNo ?? "";
+        document.getElementById("OrderDate").value = (inv.OrderDate ?? inv.orderDate ?? "").split('T')[0];
+        document.getElementById("TermsPayment").value = inv.TermsPayment ?? inv.termsPayment ?? "";
+        document.getElementById("CustomerName").value = inv.CustomerName ?? inv.customerName ?? "";
+        document.getElementById("AddressOne").value = inv.AddressOne ?? inv.addressOne ?? "";
+        document.getElementById("AddressTwo").value = inv.AddressTwo ?? inv.addressTwo ?? "";
+        document.getElementById("AddressThree").value = inv.AddressThree ?? inv.addressThree ?? "";
+        document.getElementById("AddressFour").value = inv.AddressFour ?? inv.addressFour ?? "";
+        document.getElementById("CustomerPhone").value = inv.CustomerPhone ?? inv.customerPhone ?? "";
 
-            document.getElementById("DeliveryName").value = inv.DeliveryName ?? inv.deliveryName ?? "";
-            document.getElementById("DelAddressOne").value = inv.DelAddressOne ?? inv.delAddressOne ?? "";
-            document.getElementById("DelAddressTwo").value = inv.DelAddressTwo ?? inv.delAddressTwo ?? "";
-            document.getElementById("DelAddressThree").value = inv.DelAddressThree ?? inv.delAddressThree ?? "";
-            document.getElementById("DelAddressFour").value = inv.DelAddressFour ?? inv.delAddressFour ?? "";
-            document.getElementById("DeliveryPhone").value = inv.DeliveryPhone ?? inv.deliveryPhone ?? "";
+        document.getElementById("DeliveryName").value = inv.DeliveryName ?? inv.deliveryName ?? "";
+        document.getElementById("DelAddressOne").value = inv.DelAddressOne ?? inv.delAddressOne ?? "";
+        document.getElementById("DelAddressTwo").value = inv.DelAddressTwo ?? inv.delAddressTwo ?? "";
+        document.getElementById("DelAddressThree").value = inv.DelAddressThree ?? inv.delAddressThree ?? "";
+        document.getElementById("DelAddressFour").value = inv.DelAddressFour ?? inv.delAddressFour ?? "";
+        document.getElementById("DeliveryPhone").value = inv.DeliveryPhone ?? inv.deliveryPhone ?? "";
 
-            document.getElementById("CustomerGSTNo").value = inv.CustomerGSTNo ?? inv.customerGSTNo ?? "";
-            document.getElementById("GSTState").value = inv.GSTState ?? inv.gstState ?? "";
-            document.getElementById("ItemNo").value = inv.ItemNo ?? inv.itemNo ?? "";
-            document.getElementById("Description").value = inv.Description ?? inv.description ?? "";
-            document.getElementById("HSNSAC").value = inv.HSNSAC ?? inv.hsnsac ?? "";
-            document.getElementById("Quantity").value = inv.Quantity ?? inv.quantity ?? 0;
-            document.getElementById("Rate").value = inv.Rate ?? inv.rate ?? 0;
-            document.getElementById("PER").value = inv.PER ?? inv.per ?? "";
-            document.getElementById("GSTPC").value = inv.GSTPC ?? inv.gstpc ?? 0;
-            document.getElementById("RupeesOne").value = inv.RupeesOne ?? inv.rupeesOne ?? "";
-            document.getElementById("RupeesTwo").value = inv.RupeesTwo ?? inv.rupeesTwo ?? "";
+        document.getElementById("CustomerGSTNo").value = inv.CustomerGSTNo ?? inv.customerGSTNo ?? "";
+        document.getElementById("GSTState").value = inv.GSTState ?? inv.gstState ?? "";
+        document.getElementById("ItemNo").value = inv.ItemNo ?? inv.itemNo ?? "";
+        document.getElementById("Description").value = inv.Description ?? inv.description ?? "";
+        document.getElementById("HSNSAC").value = inv.HSNSAC ?? inv.hsnsac ?? "";
+        document.getElementById("Quantity").value = inv.Quantity ?? inv.quantity ?? 0;
+        document.getElementById("Rate").value = inv.Rate ?? inv.rate ?? 0;
+        document.getElementById("PER").value = inv.PER ?? inv.per ?? "";
+        document.getElementById("GSTPC").value = inv.GSTPC ?? inv.gstpc ?? 0;
+        document.getElementById("RupeesOne").value = inv.RupeesOne ?? inv.rupeesOne ?? "";
+        document.getElementById("RupeesTwo").value = inv.RupeesTwo ?? inv.rupeesTwo ?? "";
+    }
+
+    // Collect form data
+    function getFormData() {
+        const data = {};
+        [...document.querySelectorAll("#invoiceForm input")].forEach(input => {
+            data[input.id] = input.type === "number" ? parseFloat(input.value) || 0 : input.value;
+        });
+        return data;
+    }
+
+    // Fetch all invoices
+    async function fetchAllInvoices() {
+        try {
+            const res = await fetch(apiBase);
+            if (!res.ok) throw new Error("API returned " + res.status);
+            invoices = await res.json();
+            if (invoices.length > 0) {
+                currentIndex = 0;
+                loadInvoiceToForm(invoices[currentIndex]);
+                document.getElementById("status").innerText = "Fetched " + invoices.length + " invoices";
+            } else {
+                currentIndex = -1;
+                document.getElementById("status").innerText = "No invoices found";
+            }
+        } catch (err) {
+            console.error(err);
+            document.getElementById("status").innerText = "❌ Error Fetching Invoices: " + err.message;
         }
+    }
 
+    // Navigation buttons
+    document.getElementById("firstRecord").addEventListener("click", () => {
+        if (invoices.length === 0) fetchAllInvoices();
+        if (invoices.length === 0) return;
+        currentIndex = 0;
+        loadInvoiceToForm(invoices[currentIndex]);
+    });
 
+    document.getElementById("lastRecord").addEventListener("click", () => {
+        if (invoices.length === 0) return;
+        currentIndex = invoices.length - 1;
+        loadInvoiceToForm(invoices[currentIndex]);
+    });
 
+    document.getElementById("nextRecord").addEventListener("click", () => {
+        if (invoices.length === 0) return;
+        currentIndex = Math.min(currentIndex + 1, invoices.length - 1);
+        loadInvoiceToForm(invoices[currentIndex]);
+    });
 
-        // Utility: Collect form data
-        function getFormData() {
-            const data = {};
-            [...document.querySelectorAll("#invoiceForm input")].forEach(input => {
-                data[input.id] = input.type === "number" ? parseFloat(input.value) || 0 : input.value;
+    document.getElementById("prevRecord").addEventListener("click", () => {
+        if (invoices.length === 0) return;
+        currentIndex = Math.max(currentIndex - 1, 0);
+        loadInvoiceToForm(invoices[currentIndex]);
+    });
+
+    // Submit new invoice (POST)
+    document.getElementById("invoiceForm").addEventListener("submit", async function (e) {
+        e.preventDefault();
+        const data = getFormData();
+        try {
+            const res = await fetch(apiBase, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
             });
-            return data;
+            if (res.ok) {
+                document.getElementById("status").innerText = "✅ Invoice submitted successfully!";
+                await fetchAllInvoices();
+            } else {
+                const err = await res.json();
+                document.getElementById("status").innerText = "❌ Error: " + (err.message || "Unknown");
+            }
+        } catch (err) {
+            console.error(err);
+            document.getElementById("status").innerText = "❌ Network or API error";
         }
+    });
 
-        // Fetch all invoices
-        async function fetchAllInvoices() {
-            try {
-                const res = await fetch(apiBase);
-                if (!res.ok) throw new Error("API returned " + res.status);
-                invoices = await res.json();
-                if (invoices.length > 0) {
-                    currentIndex = 0;
-                    loadInvoiceToForm(invoices[currentIndex]);
-                    document.getElementById("status").innerText = "Fetched " + invoices.length + " invoices";
-                } else {
-                    currentIndex = -1;
-                    document.getElementById("status").innerText = "No invoices found";
-                }
-            } catch (err) {
-                console.error(err);
-                document.getElementById("status").innerText = "❌ Error Fetching Invoices: " + err.message;
-            }
-        }
-
-        // Navigation buttons
-        document.getElementById("firstRecord").addEventListener("click", () => {
-            fetchAllInvoices(); //just fetch all records and show first, then other nav buttons will work
-            if (invoices.length === 0) return;
-            currentIndex = 0;
-            loadInvoiceToForm(invoices[currentIndex]);
-        });
-
-        document.getElementById("lastRecord").addEventListener("click", () => {
-            if (invoices.length === 0) return;
-            currentIndex = invoices.length - 1;
-            loadInvoiceToForm(invoices[currentIndex]);
-        });
-
-        document.getElementById("nextRecord").addEventListener("click", () => {
-            if (invoices.length === 0) return;
-            currentIndex = Math.min(currentIndex + 1, invoices.length - 1);
-            loadInvoiceToForm(invoices[currentIndex]);
-        });
-
-        document.getElementById("prevRecord").addEventListener("click", () => {
-            if (invoices.length === 0) return;
-            currentIndex = Math.max(currentIndex - 1, 0);
-            loadInvoiceToForm(invoices[currentIndex]);
-        });
-
-        // Submit new invoice (POST)
-        document.getElementById("invoiceForm").addEventListener("submit", async function (e) {
-            e.preventDefault();
-            const data = getFormData();
-            try {
-                const res = await fetch(apiBase, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(data)
-                });
-                if (res.ok) {
-                    document.getElementById("status").innerText = "✅ Invoice submitted successfully!";
-                    await fetchAllInvoices(); // refresh local list
-                } else {
-                    const err = await res.json();
-                    document.getElementById("status").innerText = "❌ Error: " + (err.message || "Unknown");
-                }
-            } catch (err) {
-                console.error(err);
-                document.getElementById("status").innerText = "❌ Network or API error";
-            }
-        });
-
-        // Save changes (PUT by RefNo)
-        document.getElementById("saveInvoice").addEventListener("click", async () => {
-            const refNo = document.getElementById("RefNo").value;
-            if (!refNo) { alert("No RefNo present."); return; }
-            const data = getFormData();
-            try {
-                const res = await fetch(`${apiBase}/ref/${refNo}`, {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(data)
-                });
-                if (res.ok) {
-                    document.getElementById("status").innerText = "✅ Saved successfully (by RefNo)";
-                    await fetchAllInvoices();
-                } else {
-                    const err = await res.json();
-                    document.getElementById("status").innerText = "❌ Error: " + (err.message || "Unknown");
-                }
-            } catch (err) {
-                console.error(err);
-                document.getElementById("status").innerText = "❌ Network or API error";
-            }
-        });
-
-        // Delete by RefNo
-        document.getElementById("deleteInvoice").addEventListener("click", async () => {
-            const refNo = document.getElementById("RefNo").value || prompt("Enter RefNo to delete:");
-            if (!refNo) return;
-            if (!confirm("Delete invoice RefNo " + refNo + "?")) return;
-            try {
-                const res = await fetch(`${apiBase}/ref/${refNo}`, { method: "DELETE" });
-                if (res.ok) {
-                    document.getElementById("status").innerText = "✅ Deleted successfully (by RefNo)";
-                    await fetchAllInvoices();
-                }
-            } catch (err) { console.error(err); }
-        });
-
-        // Delete by InvoiceNo
-        document.getElementById("deleteInvoiceNo").addEventListener("click", async () => {
-            const invoiceNo = prompt("Enter InvoiceNo to delete:");
-            if (!invoiceNo) return;
-            if (!confirm("Delete invoice InvoiceNo " + invoiceNo + "?")) return;
-            try {
-                const res = await fetch(`${apiBase}/invoiceNo/${invoiceNo}`, { method: "DELETE" });
-                if (res.ok) {
-                    document.getElementById("status").innerText = "✅ Deleted successfully (by InvoiceNo)";
-                    await fetchAllInvoices();
-                }
-            } catch (err) { console.error(err); }
-        });
-
-        // 🔹 Search by RefNo
-        document.getElementById("searchRefNo").addEventListener("click", async () => {
-            // Prompt user to enter RefNo
-            const refNo = prompt("Enter RefNo to search:");
-            if (!refNo) return;
-
-            try {
-                // Fetch invoice by RefNo
-                const res = await fetch(`${apiBase}/ref/${refNo}`);
-                if (!res.ok) {
-                    document.getElementById("status").innerText = "❌ RefNo not found";
-                    return;
-                }
-
-                const inv = await res.json();
-                // Load the invoice into the form
-                loadInvoiceToForm(inv);
-
-                // Update status message
-                document.getElementById("status").innerText = `✅ Invoice loaded for editing (RefNo: ${refNo})`;
-            } catch (err) {
-                console.error(err);
-                document.getElementById("status").innerText = "❌ Error fetching by RefNo";
-            }
-        });
-
-        // Search by InvoiceNo
-
-        document.getElementById("searchInvoiceNo").addEventListener("click", async () => {
-            const invoiceNo = prompt("Enter InvoiceNo to search:");
-            if (!invoiceNo) return;
-            try {
-
-                const encodedInvoiceNo = encodeURIComponent(invoiceNo); //handles special chars or / etc
-                const res = await fetch(`${apiBase}/invoiceNo/${encodedInvoiceNo}`); //handles special chars or / etc
-
-                if (!res.ok) { document.getElementById("status").innerText = "❌ Not found"; return; }
-                const inv = await res.json();
-                loadInvoiceToForm(inv);
-                document.getElementById("status").innerText = "✅ Invoice loaded for editing (by InvoiceNo)";
-            } catch (err) {
-                console.error(err);
-                document.getElementById("status").innerText = "❌ Error fetching by InvoiceNo";
-            }
-        });
-
-        // PUT by InvoiceNo (update)
-        async function saveByInvoiceNo(invoiceNo) {
-            const data = getFormData();
-            try {
-                const res = await fetch(`${apiBase}/invoiceNo/${invoiceNo}`, {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(data)
-                });
-                if (res.ok) {
-                    document.getElementById("status").innerText = "✅ Saved successfully (by InvoiceNo)";
-                    await fetchAllInvoices();
-                } else {
-                    const err = await res.json();
-                    document.getElementById("status").innerText = "❌ Error: " + (err.message || "Unknown");
-                }
-            } catch (err) {
-                console.error(err);
-                document.getElementById("status").innerText = "❌ Network or API error";
-            }
-        }
-
-
-        /*
-        🔹 NEW BILL UPDATE HANDLER
-        Calls POST /api/invoice/billupdate
-        Pushes current form values into "SingleBillSheet" in Excel in the new sheet first row
-        */
-        // BillUpdate button (send current form data to API)
-        document.getElementById("billUpdate").addEventListener("click", async () => {
-            const data = getFormData();  // Collects all inputs from form
-            try {
-                const res = await fetch(`${apiBase}/billupdate`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(data)
-                });
-
-                if (res.ok) {
-                    const result = await res.json();
-                    document.getElementById("status").innerText = result.message;
-                } else {
-                    const err = await res.text();
-                    document.getElementById("status").innerText = "❌ Error in BillUpdate: " + err;
-                }
-            } catch (err) {
-                console.error("BillUpdate Error:", err);
-                document.getElementById("status").innerText = "❌ Network or API error";
-            }
-        });
-
-        // Update the new sheet first row is over
-
-
-        // 🔹 Add New Bill - clears all form fields for new entry
-        document.getElementById("addNewInvoice").addEventListener("click", () => {
-            // Clear all input fields
-            document.querySelectorAll("#invoiceForm input").forEach(input => {
-                if (input.type === "number") {
-                    input.value = "";
-                } else {
-                    input.value = "";
-                }
+    // Save by RefNo (PUT)
+    document.getElementById("saveInvoice").addEventListener("click", async () => {
+        const refNo = document.getElementById("RefNo").value;
+        if (!refNo) { alert("No RefNo present."); return; }
+        const data = getFormData();
+        try {
+            const res = await fetch(`${apiBase}/ref/${refNo}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
             });
+            if (res.ok) {
+                document.getElementById("status").innerText = "✅ Saved successfully (by RefNo)";
+                await fetchAllInvoices();
+            } else {
+                const err = await res.json();
+                document.getElementById("status").innerText = "❌ Error: " + (err.message || "Unknown");
+            }
+        } catch (err) {
+            console.error(err);
+            document.getElementById("status").innerText = "❌ Network or API error";
+        }
+    });
 
-            // Reset current index so it doesn’t point to existing record
-            currentIndex = -1;
+    // Delete by RefNo
+    document.getElementById("deleteInvoice").addEventListener("click", async () => {
+        const refNo = document.getElementById("RefNo").value || prompt("Enter RefNo to delete:");
+        if (!refNo) return;
+        if (!confirm("Delete invoice RefNo " + refNo + "?")) return;
+        try {
+            const res = await fetch(`${apiBase}/ref/${refNo}`, { method: "DELETE" });
+            if (res.ok) {
+                document.getElementById("status").innerText = "✅ Deleted successfully (by RefNo)";
+                await fetchAllInvoices();
+            }
+        } catch (err) { console.error(err); }
+    });
 
-            // Update status text
-            document.getElementById("status").innerText = "🆕 Ready to enter new bill details";
+    // Delete by InvoiceNo
+    document.getElementById("deleteInvoiceNo").addEventListener("click", async () => {
+        const invoiceNo = prompt("Enter InvoiceNo to delete:");
+        if (!invoiceNo) return;
+        if (!confirm("Delete invoice InvoiceNo " + invoiceNo + "?")) return;
+        try {
+            const res = await fetch(`${apiBase}/invoiceNo/${encodeURIComponent(invoiceNo)}`, { method: "DELETE" });
+            if (res.ok) {
+                document.getElementById("status").innerText = "✅ Deleted successfully (by InvoiceNo)";
+                await fetchAllInvoices();
+            }
+        } catch (err) { console.error(err); }
+    });
 
-            // Optional: set today's date as default for invoice
-            document.getElementById("InvoiceDate").value = new Date().toISOString().split('T')[0];
-        });
+    // Search by RefNo
+    document.getElementById("searchRefNo").addEventListener("click", async () => {
+        const refNo = prompt("Enter RefNo to search:");
+        if (!refNo) return;
+        try {
+            const res = await fetch(`${apiBase}/ref/${refNo}`);
+            if (!res.ok) {
+                document.getElementById("status").innerText = "❌ RefNo not found";
+                return;
+            }
+            const inv = await res.json();
+            loadInvoiceToForm(inv);
+            document.getElementById("status").innerText = `✅ Invoice loaded for editing (RefNo: ${refNo})`;
+        } catch (err) {
+            console.error(err);
+            document.getElementById("status").innerText = "❌ Error fetching by RefNo";
+        }
+    });
 
+    // Search by InvoiceNo
+    document.getElementById("searchInvoiceNo").addEventListener("click", async () => {
+        const invoiceNo = prompt("Enter InvoiceNo to search:");
+        if (!invoiceNo) return;
+        try {
+            const res = await fetch(`${apiBase}/invoiceNo/${encodeURIComponent(invoiceNo)}`);
+            if (!res.ok) { document.getElementById("status").innerText = "❌ Not found"; return; }
+            const inv = await res.json();
+            loadInvoiceToForm(inv);
+            document.getElementById("status").innerText = "✅ Invoice loaded for editing (by InvoiceNo)";
+        } catch (err) {
+            console.error(err);
+            document.getElementById("status").innerText = "❌ Error fetching by InvoiceNo";
+        }
+    });
 
-        // Initial fetch - comment this below single line to stop loading records initially.
-        //fetchAllInvoices();
+    // PUT by InvoiceNo
+    async function saveByInvoiceNo(invoiceNo) {
+        const data = getFormData();
+        try {
+            const res = await fetch(`${apiBase}/invoiceNo/${encodeURIComponent(invoiceNo)}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
+            });
+            if (res.ok) {
+                document.getElementById("status").innerText = "✅ Saved successfully (by InvoiceNo)";
+                await fetchAllInvoices();
+            } else {
+                const err = await res.json();
+                document.getElementById("status").innerText = "❌ Error: " + (err.message || "Unknown");
+            }
+        } catch (err) {
+            console.error(err);
+            document.getElementById("status").innerText = "❌ Network or API error";
+        }
+    }
 
-        // Wait until user clicks "Search" or "Add New"
-        // (Commented out auto-fetch)
-        // fetchAllInvoices();
-        document.getElementById("status").innerText = "📄 Ready – click 'Add New Bill' or 'Search'";
+    // BillUpdate (POST)
+    document.getElementById("billUpdate").addEventListener("click", async () => {
+        const data = getFormData();
+        try {
+            const res = await fetch(`${apiBase}/billupdate`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
+            });
+            if (res.ok) {
+                const result = await res.json();
+                document.getElementById("status").innerText = result.message;
+            } else {
+                const err = await res.text();
+                document.getElementById("status").innerText = "❌ Error in BillUpdate: " + err;
+            }
+        } catch (err) {
+            console.error("BillUpdate Error:", err);
+            document.getElementById("status").innerText = "❌ Network or API error";
+        }
+    });
 
-    </script>
+    // Add new invoice (clear form)
+    document.getElementById("addNewInvoice").addEventListener("click", () => {
+        document.querySelectorAll("#invoiceForm input").forEach(input => input.value = "");
+        currentIndex = -1;
+        document.getElementById("status").innerText = "🆕 Ready to enter new bill details";
+        document.getElementById("InvoiceDate").value = new Date().toISOString().split('T')[0];
+    });
+
+    // Initial status
+    document.getElementById("status").innerText = "📄 Ready – click 'Add New Bill' or 'Search'";
+</script>
+
 </body>
 </html>
+
