@@ -1,4 +1,4 @@
-﻿using BillingAPI.Models;
+using BillingAPI.Models;
 using Microsoft.AspNetCore.Mvc;
 using ClosedXML.Excel;
 
@@ -8,30 +8,41 @@ namespace BillingAPI.Controllers
     [Route("api/[controller]")]
     public class InvoiceController : ControllerBase
     {
-        private readonly string _filePath;
+        private readonly string _templatePath;
 
-public InvoiceController()
-{
-    // Path relative to the published DLL
-    _filePath = Path.Combine(AppContext.BaseDirectory, "TaxInvoiceFormat.xlsx");
+        public InvoiceController()
+        {
+            // Excel template placed in root of published folder
+            _templatePath = Path.Combine(AppContext.BaseDirectory, "TaxInvoiceFormat.xlsx");
 
-    if (!System.IO.File.Exists(_filePath))
-    {
-        throw new FileNotFoundException("Excel template not found.", _filePath);
-    }
-}
+            if (!System.IO.File.Exists(_templatePath))
+            {
+                throw new FileNotFoundException("Excel template not found.", _templatePath);
+            }
+        }
+
+        // Helper: copy template to temp writable path
+        private string GetTempFilePath()
+        {
+            string tempFile = Path.Combine(Path.GetTempPath(), $"TaxInvoice_{Guid.NewGuid()}.xlsx");
+            System.IO.File.Copy(_templatePath, tempFile, true);
+            return tempFile;
+        }
+
         // ✅ Create new invoice
         [HttpPost]
         public IActionResult Create([FromBody] InvoiceModel model)
         {
-            using var workbook = new XLWorkbook(_filePath);
+            string tempFile = GetTempFilePath();
+
+            using var workbook = new XLWorkbook(tempFile);
             var ws = workbook.Worksheets.Worksheet(1);
 
             int lastRow = ws.LastRowUsed()?.RowNumber() ?? 1;
             int newRow = lastRow + 1;
 
             MapModelToRow(ws, newRow, model);
-            workbook.Save();
+            workbook.Save(); // saves to tempFile
 
             return Ok(new { message = "Invoice created successfully", row = newRow });
         }
@@ -40,8 +51,10 @@ public InvoiceController()
         [HttpGet]
         public IActionResult GetAll()
         {
+            string tempFile = GetTempFilePath();
             var list = new List<InvoiceModel>();
-            using var workbook = new XLWorkbook(_filePath);
+
+            using var workbook = new XLWorkbook(tempFile);
             var ws = workbook.Worksheets.Worksheet(1);
 
             foreach (var row in ws.RowsUsed().Skip(1))
@@ -56,7 +69,9 @@ public InvoiceController()
         [HttpGet("ref/{refNo}")]
         public IActionResult GetByRefNo(int refNo)
         {
-            using var workbook = new XLWorkbook(_filePath);
+            string tempFile = GetTempFilePath();
+
+            using var workbook = new XLWorkbook(tempFile);
             var ws = workbook.Worksheets.Worksheet(1);
 
             foreach (var row in ws.RowsUsed().Skip(1))
@@ -71,9 +86,10 @@ public InvoiceController()
         [HttpGet("invoiceNo/{invoiceNo}")]
         public IActionResult GetByInvoiceNo(string invoiceNo)
         {
-            string decodedInvoiceNo = Uri.UnescapeDataString(invoiceNo); //to handle "/" character in invoiceNo
+            string decodedInvoiceNo = Uri.UnescapeDataString(invoiceNo);
+            string tempFile = GetTempFilePath();
 
-            using var workbook = new XLWorkbook(_filePath);
+            using var workbook = new XLWorkbook(tempFile);
             var ws = workbook.Worksheets.Worksheet(1);
 
             foreach (var row in ws.RowsUsed().Skip(1))
@@ -121,111 +137,48 @@ public InvoiceController()
             return DeleteInvoice("InvoiceNo", decodedInvoiceNo);
         }
 
-
-
-        // 🔹 NEW ADDITION: BillUpdate - Insert last submitted invoice into SingleBillSheet for new sheet of billing to update first row in new sheet
-        // ✅ BillUpdate endpoint
+        // ✅ BillUpdate (SingleBillSheet)
         [HttpPost("billupdate")]
         public IActionResult BillUpdate([FromBody] InvoiceModel model)
         {
             try
             {
-                //string filePath = Path.Combine(Directory.GetCurrentDirectory(), "TaxInvoiceFormat.xlsx");
-                //String filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Billing", "TaxInvoiceFormat.xlsx");
-                
-                string projectRoot = Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory).Parent.Parent.Parent.FullName;
-                string filePath = Path.Combine(projectRoot, "Billing", "TaxInvoiceFormat.xlsx");
-                Console.WriteLine($"Looking for Excel file at: {filePath}");
+                string tempFile = GetTempFilePath();
 
-                using (var workbook = new XLWorkbook(filePath))
+                using var workbook = new XLWorkbook(tempFile);
+                var singleBillSheet = workbook.Worksheets.FirstOrDefault(ws => ws.Name == "SingleBillSheet");
+
+                if (singleBillSheet == null)
                 {
-                    var singleBillSheet = workbook.Worksheets.FirstOrDefault(ws => ws.Name == "SingleBillSheet");
+                    // create sheet and headers
+                    singleBillSheet = workbook.AddWorksheet("SingleBillSheet");
 
-                    if (singleBillSheet == null)
-                    {
-                        // ✅ Create sheet with headers if it doesn't exist
-                        singleBillSheet = workbook.AddWorksheet("SingleBillSheet");
-
-                        singleBillSheet.Cell(1, 1).Value = "RefNo";
-                        singleBillSheet.Cell(1, 2).Value = "InvoiceNo";
-                        singleBillSheet.Cell(1, 3).Value = "InvoiceDate";
-                        singleBillSheet.Cell(1, 4).Value = "BillType";
-                        singleBillSheet.Cell(1, 5).Value = "OrderNo";
-                        singleBillSheet.Cell(1, 6).Value = "OrderDate";
-                        singleBillSheet.Cell(1, 7).Value = "TermsPayment";
-                        singleBillSheet.Cell(1, 8).Value = "CustomerName";
-                        singleBillSheet.Cell(1, 9).Value = "AddressOne";
-                        singleBillSheet.Cell(1, 10).Value = "AddressTwo";
-                        singleBillSheet.Cell(1, 11).Value = "AddressThree";
-                        singleBillSheet.Cell(1, 12).Value = "AddressFour";
-                        singleBillSheet.Cell(1, 13).Value = "CustomerPhone";
-
-                        
-                        singleBillSheet.Cell(1, 14).Value = "DeliveryName";
-                        singleBillSheet.Cell(1, 15).Value = "DelAddressOne";
-                        singleBillSheet.Cell(1, 16).Value = "DelAddressTwo";
-                        singleBillSheet.Cell(1, 17).Value = "DelAddressThree";
-                        singleBillSheet.Cell(1, 18).Value = "DelAddressFour";
-                        singleBillSheet.Cell(1, 19).Value = "DeliveryPhone";
-
-                        singleBillSheet.Cell(1, 20).Value = "CustomerGSTNo";
-                        singleBillSheet.Cell(1, 21).Value = "GSTState";
-                        singleBillSheet.Cell(1, 22).Value = "ItemNo";
-                        singleBillSheet.Cell(1, 23).Value = "Description";
-                        singleBillSheet.Cell(1, 24).Value = "HSNSAC";
-                        singleBillSheet.Cell(1, 25).Value = "Quantity";
-                        singleBillSheet.Cell(1, 26).Value = "Rate";
-                        singleBillSheet.Cell(1, 27).Value = "PER";
-                        singleBillSheet.Cell(1, 28).Value = "GSTPC";
-                        singleBillSheet.Cell(1, 29).Value = "RupeesOne";
-                        singleBillSheet.Cell(1, 30).Value = "RupeesTwo";
-                    }
-
-                    // ✅ Convert invoice model to array
-                    var rowData = new object[]
-                    {
-                model.RefNo,
-                model.InvoiceNo,
-                model.InvoiceDate,
-                model.BillType,
-                model.OrderNo,
-                model.OrderDate,
-                model.TermsPayment,
-                model.CustomerName,
-                model.AddressOne,
-                model.AddressTwo,
-                model.AddressThree,
-                model.AddressFour,
-                model.CustomerPhone,
-                model.DeliveryName,
-                model.DelAddressOne,
-                model.DelAddressTwo,
-                model.DelAddressThree,
-                model.DelAddressFour,
-                model.DeliveryPhone,
-                model.CustomerGSTNo,
-                model.GSTState,
-                model.ItemNo,
-                model.Description,
-                model.HSNSAC,
-                model.Quantity,
-                model.Rate,
-                model.PER,
-                model.GSTPC,
-                model.RupeesOne,
-                model.RupeesTwo
+                    string[] headers = {
+                        "RefNo","InvoiceNo","InvoiceDate","BillType","OrderNo","OrderDate","TermsPayment",
+                        "CustomerName","AddressOne","AddressTwo","AddressThree","AddressFour","CustomerPhone",
+                        "DeliveryName","DelAddressOne","DelAddressTwo","DelAddressThree","DelAddressFour","DeliveryPhone",
+                        "CustomerGSTNo","GSTState","ItemNo","Description","HSNSAC","Quantity","Rate","PER","GSTPC","RupeesOne","RupeesTwo"
                     };
 
-                    // ✅ Insert as row 2 (push down older data)
-                    singleBillSheet.Row(2).InsertRowsAbove(1);
-
-                    for (int i = 0; i < rowData.Length; i++)
-                    {
-                        singleBillSheet.Cell(2, i + 1).Value = rowData[i]?.ToString() ?? string.Empty;
-                    }
-
-                    workbook.Save();
+                    for(int i=0;i<headers.Length;i++)
+                        singleBillSheet.Cell(1, i+1).Value = headers[i];
                 }
+
+                // prepare row data
+                object[] rowData = {
+                    model.RefNo, model.InvoiceNo, model.InvoiceDate, model.BillType, model.OrderNo, model.OrderDate,
+                    model.TermsPayment, model.CustomerName, model.AddressOne, model.AddressTwo, model.AddressThree, model.AddressFour,
+                    model.CustomerPhone, model.DeliveryName, model.DelAddressOne, model.DelAddressTwo, model.DelAddressThree, model.DelAddressFour,
+                    model.DeliveryPhone, model.CustomerGSTNo, model.GSTState, model.ItemNo, model.Description, model.HSNSAC,
+                    model.Quantity, model.Rate, model.PER, model.GSTPC, model.RupeesOne, model.RupeesTwo
+                };
+
+                // insert as row 2
+                singleBillSheet.Row(2).InsertRowsAbove(1);
+                for (int i = 0; i < rowData.Length; i++)
+                    singleBillSheet.Cell(2, i + 1).Value = rowData[i]?.ToString() ?? string.Empty;
+
+                workbook.Save();
 
                 return Ok(new { message = "✅ Invoice added to SingleBillSheet (as first row)" });
             }
@@ -235,56 +188,31 @@ public InvoiceController()
             }
         }
 
-        // 🔹 END OF BillUpdate addition - for new sheet of billing to update first row in new sheet
-
-
-
+        // 🔹 Helper methods
 
         private IActionResult UpdateInvoice(string keyType, string keyValue, InvoiceModel model)
         {
-            using var workbook = new XLWorkbook(_filePath);
+            string tempFile = GetTempFilePath();
+            using var workbook = new XLWorkbook(tempFile);
             var ws = workbook.Worksheets.Worksheet(1);
 
-            int targetRow = -1;
-            foreach (var row in ws.RowsUsed().Skip(1))
-            {
-                string value = keyType == "RefNo" ? row.Cell(1).GetValue<int>().ToString() : row.Cell(2).GetValue<string>();
-                if (value.Equals(keyValue, StringComparison.OrdinalIgnoreCase))
-                {
-                    targetRow = row.RowNumber();
-                    break;
-                }
-            }
-
-            if (targetRow == -1)
-                return NotFound(new { message = $"{keyType} {keyValue} not found" });
+            int targetRow = FindRow(ws, keyType, keyValue);
+            if (targetRow == -1) return NotFound(new { message = $"{keyType} {keyValue} not found" });
 
             MapModelToRow(ws, targetRow, model);
             workbook.Save();
-
             return Ok(new { message = $"Invoice {keyType} {keyValue} updated successfully" });
         }
 
         private IActionResult PatchInvoice(string keyType, string keyValue, Dictionary<string, object> updates)
         {
-            using var workbook = new XLWorkbook(_filePath);
+            string tempFile = GetTempFilePath();
+            using var workbook = new XLWorkbook(tempFile);
             var ws = workbook.Worksheets.Worksheet(1);
 
-            int targetRow = -1;
-            foreach (var row in ws.RowsUsed().Skip(1))
-            {
-                string value = keyType == "RefNo" ? row.Cell(1).GetValue<int>().ToString() : row.Cell(2).GetValue<string>();
-                if (value.Equals(keyValue, StringComparison.OrdinalIgnoreCase))
-                {
-                    targetRow = row.RowNumber();
-                    break;
-                }
-            }
+            int targetRow = FindRow(ws, keyType, keyValue);
+            if (targetRow == -1) return NotFound(new { message = $"{keyType} {keyValue} not found" });
 
-            if (targetRow == -1)
-                return NotFound(new { message = $"{keyType} {keyValue} not found" });
-
-            // Apply updates
             var rowToUpdate = ws.Row(targetRow);
             foreach (var kv in updates)
             {
@@ -303,14 +231,12 @@ public InvoiceController()
                     "AddressThree" => rowToUpdate.Cell(11),
                     "AddressFour" => rowToUpdate.Cell(12),
                     "CustomerPhone" => rowToUpdate.Cell(13),
-
                     "DeliveryName" => rowToUpdate.Cell(14),
                     "DelAddressOne" => rowToUpdate.Cell(15),
                     "DelAddressTwo" => rowToUpdate.Cell(16),
                     "DelAddressThree" => rowToUpdate.Cell(17),
                     "DelAddressFour" => rowToUpdate.Cell(18),
                     "DeliveryPhone" => rowToUpdate.Cell(19),
-
                     "CustomerGSTNo" => rowToUpdate.Cell(20),
                     "GSTState" => rowToUpdate.Cell(21),
                     "ItemNo" => rowToUpdate.Cell(22),
@@ -325,59 +251,38 @@ public InvoiceController()
                     _ => null
                 };
 
-                if (cell != null)
-                {
-                    object value = kv.Value;
-
-                    if (value == null)
-                        cell.Clear();
-                    else if (value is string s)
-                        cell.Value = s;
-                    else if (value is int i)
-                        cell.Value = i;
-                    else if (value is long l)
-                        cell.Value = l;
-                    else if (value is double d)
-                        cell.Value = d;
-                    else if (value is decimal dec)
-                        cell.Value = dec;
-                    else if (value is DateTime dt)
-                        cell.Value = dt;
-                    else
-                        cell.Value = value.ToString(); // fallback
-                }
+                if (cell != null) cell.Value = kv.Value?.ToString() ?? string.Empty;
             }
 
             workbook.Save();
             return Ok(new { message = $"Invoice {keyType} {keyValue} patched successfully" });
         }
 
-
         private IActionResult DeleteInvoice(string keyType, string keyValue)
         {
-            using var workbook = new XLWorkbook(_filePath);
+            string tempFile = GetTempFilePath();
+            using var workbook = new XLWorkbook(tempFile);
             var ws = workbook.Worksheets.Worksheet(1);
 
-            int targetRow = -1;
-            foreach (var row in ws.RowsUsed().Skip(1))
-            {
-                string value = keyType == "RefNo" ? row.Cell(1).GetValue<int>().ToString() : row.Cell(2).GetValue<string>();
-                if (value.Equals(keyValue, StringComparison.OrdinalIgnoreCase))
-                {
-                    targetRow = row.RowNumber();
-                    break;
-                }
-            }
-
-            if (targetRow == -1)
-                return NotFound(new { message = $"{keyType} {keyValue} not found" });
+            int targetRow = FindRow(ws, keyType, keyValue);
+            if (targetRow == -1) return NotFound(new { message = $"{keyType} {keyValue} not found" });
 
             ws.Row(targetRow).Delete();
             workbook.Save();
             return Ok(new { message = $"Invoice {keyType} {keyValue} deleted successfully" });
         }
 
-        // 🔹 Mapping helpers
+        private int FindRow(IXLWorksheet ws, string keyType, string keyValue)
+        {
+            foreach (var row in ws.RowsUsed().Skip(1))
+            {
+                string value = keyType == "RefNo" ? row.Cell(1).GetValue<int>().ToString() : row.Cell(2).GetValue<string>();
+                if (value.Equals(keyValue, StringComparison.OrdinalIgnoreCase))
+                    return row.RowNumber();
+            }
+            return -1;
+        }
+
         private void MapModelToRow(IXLWorksheet ws, int row, InvoiceModel m)
         {
             ws.Cell(row, 1).Value = m.RefNo;
@@ -393,14 +298,12 @@ public InvoiceController()
             ws.Cell(row, 11).Value = m.AddressThree;
             ws.Cell(row, 12).Value = m.AddressFour;
             ws.Cell(row, 13).Value = m.CustomerPhone;
-
             ws.Cell(row, 14).Value = m.DeliveryName;
             ws.Cell(row, 15).Value = m.DelAddressOne;
             ws.Cell(row, 16).Value = m.DelAddressTwo;
             ws.Cell(row, 17).Value = m.DelAddressThree;
             ws.Cell(row, 18).Value = m.DelAddressFour;
             ws.Cell(row, 19).Value = m.DeliveryPhone;
-
             ws.Cell(row, 20).Value = m.CustomerGSTNo;
             ws.Cell(row, 21).Value = m.GSTState;
             ws.Cell(row, 22).Value = m.ItemNo;
@@ -437,7 +340,6 @@ public InvoiceController()
                 DelAddressThree = row.Cell(17).GetValue<string>(),
                 DelAddressFour = row.Cell(18).GetValue<string>(),
                 DeliveryPhone = row.Cell(19).GetValue<string>(),
-
                 CustomerGSTNo = row.Cell(20).GetValue<string>(),
                 GSTState = row.Cell(21).GetValue<string>(),
                 ItemNo = row.Cell(22).GetValue<string>(),
@@ -451,7 +353,5 @@ public InvoiceController()
                 RupeesTwo = row.Cell(30).GetValue<string>()
             };
         }
-
     }
 }
-
