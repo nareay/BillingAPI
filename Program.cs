@@ -31,7 +31,7 @@ app.UseSwaggerUI();
 
 // ✅ Serve static files from wwwroot (for index.html etc.)
 app.UseStaticFiles();
-
+app.UseDefaultFiles();   // 👈 this automatically finds index.html
 app.UseAuthorization();
 
 // ✅ Enable CORS
@@ -39,6 +39,8 @@ app.UseCors();
 
 // ✅ Map controllers
 app.MapControllers();
-
+// ✅ Serve index.html for root URL and fallback routes
+app.MapFallbackToFile("index.html");
 // ✅ Run the app (Render uses port 8080 by default)
 app.Run();
+
