@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -9,7 +9,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// ✅ Enable CORS for local front-end
+// ✅ Enable CORS for front-end access
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
@@ -22,25 +22,23 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+// ✅ Enable Swagger for all environments (so you can test live)
+app.UseSwagger();
+app.UseSwaggerUI();
 
-app.UseHttpsRedirection();
+// ❌ Remove HTTPS redirection on Render
+// app.UseHttpsRedirection();
 
-// Serve static files from wwwroot
+// ✅ Serve static files from wwwroot (for index.html etc.)
 app.UseStaticFiles();
 
 app.UseAuthorization();
 
-// ✅ Use CORS
+// ✅ Enable CORS
 app.UseCors();
 
-var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
-app.Urls.Add($"http://*:{port}");
-
+// ✅ Map controllers
 app.MapControllers();
-app.Run();
 
+// ✅ Run the app (Render uses port 8080 by default)
+app.Run();
