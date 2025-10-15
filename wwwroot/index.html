@@ -270,12 +270,13 @@
 
                 <button type="button" id="billUpdate">BillUpdate</button>
                 <button onclick="logout()">Logout</button>
-                <br>
-                <a href="https://billingapi-ncl9.onrender.com/api/download/excel" target="_blank">Download Bill</a>
+                <!-- ✅ Keep link inside same section -->
+                    <a href="https://billingapi-ncl9.onrender.com/api/download/excel" target="_blank" 
+                       style="display:inline-block; margin-top:10px; color:#007bff; text-decoration:none; font-weight:bold;">
+                       ⬇️ Download Excel
+                    </a>
             </div>
         </form>
-        <a href="https://billingapi-ncl9.onrender.com/api/download/excel" target="_blank">Download Excel</a>
-
         <div class="status" id="status"></div>
     </div>
 
@@ -557,6 +558,7 @@
 
 </body>
 </html>
+
 
 
 
