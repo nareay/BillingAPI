@@ -170,7 +170,7 @@ namespace BillingAPI.Controllers
                     {
                         cell.Clear();
                     }
-                    else if (i >= 24 && i <= 27) // Columns 25–28 (Quantity, Rate, PER, GSTPC)
+                    else if (i == 24 || i == 25 || i == 27) // // Only 24, 25, and 27 are numeric (Quantity, Rate, GSTPC)
                     {
                         // Explicit numeric conversion
                         if (double.TryParse(value.ToString(), out double numVal))
@@ -343,7 +343,7 @@ namespace BillingAPI.Controllers
             // 🔹 Ensure these numeric fields are written as actual numbers (not text)
             ws.Cell(row, 25).Value = Convert.ToDouble(m.Quantity); // Quantity as number
             ws.Cell(row, 26).Value = Convert.ToDouble(m.Rate);     // Rate as number
-            ws.Cell(row, 27).Value = Convert.ToDouble(m.PER);      // PER as number
+            ws.Cell(row, 27).Value = m.PER;
             ws.Cell(row, 28).Value = Convert.ToDouble(m.GSTPC);    // GST% as number
             
             //ws.Cell(row, 25).Value = m.Quantity;
@@ -393,6 +393,7 @@ namespace BillingAPI.Controllers
         }
     }
 }
+
 
 
 
