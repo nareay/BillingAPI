@@ -123,18 +123,18 @@ namespace BillingAPI.Controllers
         }
 
         // ✅ BillUpdate endpoint for SingleBillSheet
-        [HttpPost("billupdate")]
+       [HttpPost("billupdate")]
         public IActionResult BillUpdate([FromBody] InvoiceModel model)
         {
             try
             {
                 using var workbook = new XLWorkbook(_filePath);
                 var singleBillSheet = workbook.Worksheets.FirstOrDefault(ws => ws.Name == "SingleBillSheet");
-
+        
                 if (singleBillSheet == null)
                 {
                     singleBillSheet = workbook.AddWorksheet("SingleBillSheet");
-
+        
                     string[] headers = new string[]
                     {
                         "RefNo","InvoiceNo","InvoiceDate","BillType","OrderNo","OrderDate","TermsPayment",
@@ -142,11 +142,11 @@ namespace BillingAPI.Controllers
                         "DeliveryName","DelAddressOne","DelAddressTwo","DelAddressThree","DelAddressFour","DeliveryPhone",
                         "CustomerGSTNo","GSTState","ItemNo","Description","HSNSAC","Quantity","Rate","PER","GSTPC","RupeesOne","RupeesTwo"
                     };
-
+        
                     for (int i = 0; i < headers.Length; i++)
                         singleBillSheet.Cell(1, i + 1).Value = headers[i];
                 }
-
+        
                 // Convert model to array
                 var rowData = new object[]
                 {
@@ -156,43 +156,35 @@ namespace BillingAPI.Controllers
                     model.DeliveryPhone, model.CustomerGSTNo, model.GSTState, model.ItemNo, model.Description, model.HSNSAC,
                     model.Quantity, model.Rate, model.PER, model.GSTPC, model.RupeesOne, model.RupeesTwo
                 };
-
-                // Insert as row 2
+        
+                // Insert new first row (push existing data down)
                 singleBillSheet.Row(2).InsertRowsAbove(1);
-
-               /* for (int i = 0; i < rowData.Length; i++)
+        
+                // ✅ Write each cell safely with type checking
+                for (int i = 0; i < rowData.Length; i++)
                 {
+                    var cell = singleBillSheet.Cell(2, i + 1);
                     var value = rowData[i];
-                    singleBillSheet.Cell(2, i + 1).Value = value?.ToString() ?? string.Empty;
+        
+                    if (value == null)
+                    {
+                        cell.Clear();
+                    }
+                    else if (i >= 24 && i <= 27) // Columns 25–28 (Quantity, Rate, PER, GSTPC)
+                    {
+                        // Explicit numeric conversion
+                        if (double.TryParse(value.ToString(), out double numVal))
+                            cell.SetValue(numVal);
+                        else
+                            cell.SetValue(0d);
+                    }
+                    else
+                    {
+                        // Explicitly convert to string for text fields
+                        cell.SetValue(value.ToString());
+                    }
                 }
-                */
-
-                //Below code for saving numeric for rate, qualtity, per and gst by replacing the above for loop (full string)
-                 // 🔹 Write each cell, forcing numeric for Quantity, Rate, PER, GSTPC (columns 25–28)
-                        for (int i = 0; i < rowData.Length; i++)
-                        {
-                            var value = rowData[i];
-                
-                            if (value == null)
-                            {
-                                singleBillSheet.Cell(2, i + 1).Clear();
-                            }
-                            else if (i >= 24 && i <= 27) // Columns 25–28 are numeric fields
-                            {
-                                if (double.TryParse(value.ToString(), out double numVal))
-                                    singleBillSheet.Cell(2, i + 1).Value = numVal;
-                                else
-                                    singleBillSheet.Cell(2, i + 1).Value = 0; // fallback if parsing fails
-                            }
-                            else
-                            {
-                                singleBillSheet.Cell(2, i + 1).Value = value;
-                            }
-                        }
-
-                // 🔹 Above code each cell, forcing numeric for Quantity, Rate, PER, GSTPC (columns 25–28)
-
-                
+        
                 workbook.Save();
                 return Ok(new { message = "✅ Invoice added to SingleBillSheet (as first row)" });
             }
@@ -201,6 +193,7 @@ namespace BillingAPI.Controllers
                 return StatusCode(500, $"Error in BillUpdate: {ex.Message}");
             }
         }
+        
 
         // 🔹 Private helpers
         private IActionResult UpdateInvoice(string keyType, string keyValue, InvoiceModel model)
@@ -400,5 +393,6 @@ namespace BillingAPI.Controllers
         }
     }
 }
+
 
 
