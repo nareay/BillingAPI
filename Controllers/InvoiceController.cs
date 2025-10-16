@@ -160,12 +160,39 @@ namespace BillingAPI.Controllers
                 // Insert as row 2
                 singleBillSheet.Row(2).InsertRowsAbove(1);
 
-                for (int i = 0; i < rowData.Length; i++)
+               /* for (int i = 0; i < rowData.Length; i++)
                 {
                     var value = rowData[i];
                     singleBillSheet.Cell(2, i + 1).Value = value?.ToString() ?? string.Empty;
                 }
+                */
 
+                //Below code for saving numeric for rate, qualtity, per and gst by replacing the above for loop (full string)
+                 // 🔹 Write each cell, forcing numeric for Quantity, Rate, PER, GSTPC (columns 25–28)
+                        for (int i = 0; i < rowData.Length; i++)
+                        {
+                            var value = rowData[i];
+                
+                            if (value == null)
+                            {
+                                singleBillSheet.Cell(2, i + 1).Clear();
+                            }
+                            else if (i >= 24 && i <= 27) // Columns 25–28 are numeric fields
+                            {
+                                if (double.TryParse(value.ToString(), out double numVal))
+                                    singleBillSheet.Cell(2, i + 1).Value = numVal;
+                                else
+                                    singleBillSheet.Cell(2, i + 1).Value = 0; // fallback if parsing fails
+                            }
+                            else
+                            {
+                                singleBillSheet.Cell(2, i + 1).Value = value;
+                            }
+                        }
+
+                // 🔹 Above code each cell, forcing numeric for Quantity, Rate, PER, GSTPC (columns 25–28)
+
+                
                 workbook.Save();
                 return Ok(new { message = "✅ Invoice added to SingleBillSheet (as first row)" });
             }
@@ -373,4 +400,5 @@ namespace BillingAPI.Controllers
         }
     }
 }
+
 
