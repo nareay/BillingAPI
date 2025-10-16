@@ -319,10 +319,18 @@ namespace BillingAPI.Controllers
             ws.Cell(row, 22).Value = m.ItemNo;
             ws.Cell(row, 23).Value = m.Description;
             ws.Cell(row, 24).Value = m.HSNSAC;
-            ws.Cell(row, 25).Value = m.Quantity;
-            ws.Cell(row, 26).Value = m.Rate;
-            ws.Cell(row, 27).Value = m.PER;
-            ws.Cell(row, 28).Value = m.GSTPC;
+            
+            // 🔹 Ensure these numeric fields are written as actual numbers (not text)
+            ws.Cell(row, 25).Value = Convert.ToDouble(m.Quantity); // Quantity as number
+            ws.Cell(row, 26).Value = Convert.ToDouble(m.Rate);     // Rate as number
+            ws.Cell(row, 27).Value = Convert.ToDouble(m.PER);      // PER as number
+            ws.Cell(row, 28).Value = Convert.ToDouble(m.GSTPC);    // GST% as number
+            
+            //ws.Cell(row, 25).Value = m.Quantity;
+            //ws.Cell(row, 26).Value = m.Rate;
+            //ws.Cell(row, 27).Value = m.PER;
+            //ws.Cell(row, 28).Value = m.GSTPC;
+            
             ws.Cell(row, 29).Value = m.RupeesOne;
             ws.Cell(row, 30).Value = m.RupeesTwo;
         }
@@ -365,3 +373,4 @@ namespace BillingAPI.Controllers
         }
     }
 }
+
